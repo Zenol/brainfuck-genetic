@@ -1,14 +1,15 @@
 #include "Vm.hpp"
+#include "Genetic.hpp"
 
 #include <iostream>
 
 int main()
 {
-    std::string pg, line;
-    while (std::cin >> line)
-        pg += line;
-    VM vm(pg);
-    vm.run("");
-    std::cout << vm.output;
+    auto gen = random_generation(500, 40);
+    for (auto vm : gen)
+    {
+        vm.run("34");
+        std::cout << vm.output << std::endl;
+    }
     return 0;
 }

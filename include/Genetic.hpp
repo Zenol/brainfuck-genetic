@@ -9,12 +9,15 @@ typedef std::vector<VM> Generation;
 //! Generate random adn (can be invalid)
 std::string random_adn(int code_length);
 
-//! Repaire broken adn.
+//! Simplification of genetic code
+std::string simplify(std::string code);
+
+//! Repair broken adn.
 //!
 //! Its usefull for creating valid random adn, or after
 //! a mutation.
-std::string repaire(std::string);
+std::string repair(std::string);
 
-Generation create_random_generation(int size, int code_length);
+Generation random_generation(int size, int code_length);
 
 #endif

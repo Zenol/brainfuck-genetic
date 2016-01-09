@@ -33,6 +33,12 @@ VM::VM(std::string icode)
     :code(icode)
 {}
 
+void VM::reset()
+{
+    output = "";
+    ribbon = Ribbon();
+}
+
 // -- Helpers
 static int goto_bracket_end(int i, std::string code)
 {
@@ -73,7 +79,7 @@ static int goto_bracket_begin(int i, std::string code)
 bool VM::run(std::string input, int max_cycles)
 {
     int input_idx = 0;
-    for (int i = 0; i < code.length(); i++)
+    for (int i = 0; i < code.length() && max_cycles; i++, max_cycles--)
     {
         switch(code[i])
         {
@@ -91,7 +97,6 @@ bool VM::run(std::string input, int max_cycles)
             break;
         case '.':
             output.push_back(ribbon.v);
-            std::cout << ribbon.v;
             break;
         case ',':
             if (i < input.length())
