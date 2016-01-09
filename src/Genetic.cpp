@@ -3,7 +3,6 @@
 #include <random>
 #include <map>
 
-
 //Law of probabilities
 
 std::map<char, int> law = {
@@ -114,4 +113,15 @@ Generation random_generation(int size, int code_length)
     }
 
     return gen;
+}
+
+std::set<std::pair<int, std::string>>
+    sort_generation(std::vector<VM> gen, std::function<int (const VM&)> f)
+{
+    std::set<std::pair<int, std::string>> set;
+
+    for (auto vm : gen)
+        set.insert(std::make_pair(f(vm), vm.code));
+
+    return set;
 }
