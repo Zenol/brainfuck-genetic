@@ -30,13 +30,14 @@ void Ribbon::right()
 // -- Vm implementation
 
 VM::VM(std::string icode)
-    :code(icode)
+    :code(icode), input_consumed(0)
 {}
 
 void VM::reset()
 {
     output = "";
     ribbon = Ribbon();
+    input_consumed = 0;
 }
 
 // -- Helpers
@@ -99,10 +100,11 @@ bool VM::run(std::string input, int max_cycles)
             output.push_back(ribbon.v);
             break;
         case ',':
+            input_consumed++;
             if (i < input.length())
                 ribbon.v = input[i];
             else
-                return true;
+                ribbon.v = '\04';
             break;
         case '[':
             if (ribbon.v == 0)

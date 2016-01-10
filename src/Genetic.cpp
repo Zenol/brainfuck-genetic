@@ -1,25 +1,25 @@
 #include "Genetic.hpp"
 
+#include <algorithm>
 #include <random>
 #include <map>
 
 //Law of probabilities
 
 std::map<char, int> law = {
-    std::make_pair('[', 10),
-    std::make_pair(']', 10),
-    std::make_pair('.', 8),
-    std::make_pair(',', 7),
-    std::make_pair('>', 70),
-    std::make_pair('<', 70),
+    std::make_pair('[', 100),
+    std::make_pair(']', 100),
+    std::make_pair('.', 100),
+    std::make_pair(',', 0),
+    std::make_pair('>', 100),
+    std::make_pair('<', 100),
     std::make_pair('-', 100),
-    std::make_pair('+', 270)
+    std::make_pair('+', 100)
 };
 
 std::default_random_engine rd;
 std::uniform_int_distribution<int> uniform_dist(0, 1000);
 
-static
 char rand_char()
 {
     float p = uniform_dist(rd) / 1000.f;
@@ -55,47 +55,53 @@ std::string repair(std::string code)
     int length = code.length();
     for (int i = 0; i < length; i++)
     {
-        if (code[i] == ']' && lvl == 0)
+        // Forget about closing bracket with no use
+        if (code[i] == ']' && lvl <= 0)
             continue;
+        // Count opening bracket
         if (code[i] == '[')
             lvl++;
+        // Count closing backet
         if (code[i] == ']')
             lvl--;
         out.push_back(code[i]);
     }
+    // Add missing closing brackets
     while(lvl-- > 0)
         out.push_back(']');
+
     return out;
 }
-
 
 std::string simplify(std::string code)
 {
     std::string out;
 
-    int length = code.length();
-    for (int i = 0; i < length; i++)
+    // If code is empty, do nothing
+    if (code.length() == 0)
+        return code;
+
+    //! Helper macro used to check if we simplify two characters
+    #define simp(a, b)                         \
+    if (code[i] == b)                          \
+        if (out.length() && out.back() == a)   \
+        {                                      \
+            out.pop_back();                    \
+            continue;                          \
+        }                                      \
+
+    // Simplify with previous chars
+    for (int i = 0; i < code.length(); i++)
     {
-        if (code[i] == '+')
-            if (i + 1 < length && code[i+1] == '-')
-            {
-                i += 2;
-                continue;
-            }
-        if (code[i] == '[')
-            if (i + 1 < length && code[i+1] == ']')
-            {
-                i += 2;
-                continue;
-            }
-        if (code[i] == '-')
-            if (i + 1 < length && code[i+1] == '+')
-            {
-                i += 2;
-                continue;
-            }
+        simp('+', '-');
+        simp('-', '+');
+        simp('[', ']');
+        simp('<', '>');
+        simp('>', '<');
+
         out.push_back(code[i]);
     }
+
     return out;
 }
 
@@ -124,4 +130,65 @@ std::set<std::pair<int, std::string>>
         set.insert(std::make_pair(f(vm), vm.code));
 
     return set;
+}
+
+std::string mutate_replace(const std::string &code, float p)
+{
+    std::string out;
+    for (auto c : code)
+    {
+        float q = uniform_dist(rd) / 1000.f;
+        if (q < p)
+            out.push_back(rand_char());
+        else
+            out.push_back(c);
+    }
+    return out;
+}
+
+
+std::string mutate_insert(const std::string &code, float p)
+{
+    std::string out;
+    for (auto c : code)
+    {
+        float q = uniform_dist(rd) / 1000.f;
+        if (q < p)
+            out.push_back(rand_char());
+        out.push_back(c);
+    }
+    return out;
+}
+
+std::string mutate_delete(const std::string &code, float p)
+{
+    std::string out;
+    for (auto c : code)
+    {
+        float q = uniform_dist(rd) / 1000.f;
+        if (q < p)
+            continue;
+        out.push_back(c);
+    }
+    return out;
+}
+
+
+std::string merge_from_start(const std::string &a, const std::string &b)
+{
+    std::string out;
+
+    auto pa = a.begin();
+    auto pb = b.begin();
+    while(pa != a.end() && pb != b.end())
+    {
+        out.push_back(*pa);
+        out.push_back(*pb);
+        pa++;
+        pb++;
+    }
+    std::copy(pa, a.end(), std::back_inserter(out));
+    std::copy(pb, b.end(), std::back_inserter(out));
+
+    return out;
 }
