@@ -12,7 +12,7 @@
 //      81 -> 9
 
 
-//#define GRAPH
+#define GRAPH
 
 char rand_char();
 
@@ -59,7 +59,7 @@ unsigned text_cost(VM vm, std::string expected_string)
     if (vm.output.length() < expected_string.length())
         cost += 256 * (expected_string.length() - vm.output.length());
     else
-        cost += 200 * (vm.output.length() - expected_string.length());
+        cost += 100 * (vm.output.length() - expected_string.length());
 
     // We count the distance beetween each letter
     auto len = std::min(vm.output.length(), expected_string.length());
@@ -76,13 +76,13 @@ unsigned text_cost(VM vm, std::string expected_string)
 int main()
 {
     typedef std::set<std::pair<unsigned int, std::string>> ScoredGen;
-    auto gen = random_generation(1000, 30);
+    auto gen = random_generation(5000, 80);
     ScoredGen gens;
 
     // Our goal
-    std::string goal_string = "Hello!";
+    std::string goal_string = "Hello world!";
 
-    for (int i = 0; /* i < 50000 */ true; i++)
+    for (int i = 0; i < 45000; i++)
     {
         gens = ScoredGen();
         for (int i = 0; i < gen.size(); i++)
@@ -124,7 +124,7 @@ int main()
 
         #else
 
-        if (i % 100 == 0)
+        if (i % 1 == 0)
             std::cout << gens.begin()->first
                       << " "
                       << gens.rbegin()->first
@@ -151,11 +151,15 @@ int main()
         // }
 
         it = gens.begin();
-        for (int i = 0; i < 50; i++, it++)
+        for (int i = 0; i < 30; i++, it++)
         {
             newGen.push_back(VM(simplify(repair(mutate_insert(it->second, 0.01f)))));
             newGen.push_back(VM(simplify(repair(mutate_delete(it->second, 0.01f)))));
             newGen.push_back(VM(simplify(repair(mutate_replace(it->second, 0.01f)))));
+
+            newGen.push_back(VM(simplify(repair(mutate_insert(it->second, 0.1f)))));
+            newGen.push_back(VM(simplify(repair(mutate_delete(it->second, 0.1f)))));
+            newGen.push_back(VM(simplify(repair(mutate_replace(it->second, 0.1f)))));
         }
 
         // Cross breeding of the 101 first champions (non symetric)
@@ -173,7 +177,7 @@ int main()
         std::swap(gen, newGen);
     }
 
-//    #ifndef GRAPH
+    #ifndef GRAPH
 
     for (auto kv : gens)
     {
@@ -189,7 +193,7 @@ int main()
                   << std::endl;
     }
 
-//    #endif
+    #endif
 
     return 0;
 }
