@@ -26,7 +26,9 @@ Generation random_generation(int size, int code_length);
 
 //! Merge genetic code by alternating instructions of each program.
 std::string merge_from_start(const std::string &a, const std::string &b);
-std::string cross_over(const std::string &a, const std::string &b, int block_size = 1);
+void cross_over(std::string &a, std::string &b);
+
+std::string multi_cross_over(const std::string &a, const std::string &b, int block_size);
 
 //! Replace some random genes of 'code' with probability 'p'
 std::string mutate_replace(const std::string &code, float p);

@@ -37,7 +37,7 @@ char rand_char()
             return kv.first;
         p -= kv.second;
     }
-    return '+';
+    return '#';
 }
 
 std::string random_adn(int code_length)
@@ -189,8 +189,29 @@ std::string merge_from_start(const std::string &a, const std::string &b)
     return out;
 }
 
-std::string cross_over(const std::string &a, const std::string &b, int block_size)
+void cross_over(std::string &a, std::string &b)
 {
+
+    std::string oa, ob;
+
+    std::uniform_int_distribution<int> uniform_dist(1, a.length());
+    int cut_index = uniform_dist(rd);
+
+    oa += a.substr(0, cut_index);
+    if (cut_index < b.length())
+        oa += b.substr(cut_index, std::string::npos);
+
+    ob += b.substr(0, cut_index);
+    if (cut_index < a.length())
+        ob += a.substr(cut_index, std::string::npos);
+
+    a = oa;
+    b = ob;
+}
+
+std::string multi_cross_over(const std::string &a, const std::string &b, int block_size)
+{
+
     std::string out;
 
     auto pa = a.begin();
