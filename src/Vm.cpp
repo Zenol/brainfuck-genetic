@@ -108,14 +108,25 @@ bool VM::run(std::string input, int max_cycles)
             break;
         case '[':
             if (ribbon.v == 0)
-                i = goto_bracket_end(i, code);
+            {
+                int j = goto_bracket_end(i, code);
+                if (j > -1)
+                    i = j;
+                continue;
+            }
             break;
         case ']':
             if (ribbon.v != 0)
-                i = goto_bracket_begin(i, code);
+            {
+                int j = goto_bracket_begin(i, code);
+                if (j > -1)
+                    i = j;
+                continue;
+            }
             break;
         default:
-            throw "Invalid brainfuck code";
+            //Ignore unknow characters
+            continue;
         }
         if (i < 0)
             return false;

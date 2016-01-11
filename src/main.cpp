@@ -3,6 +3,8 @@
 
 #include <iostream>
 #include <cmath>
+#include <random>
+#include <algorithm>
 
 // Goal :
 // Generate a program that compute the sum of the two char
@@ -12,7 +14,7 @@
 //      81 -> 9
 
 
-#define GRAPH
+// #define GRAPH
 
 char rand_char();
 
@@ -48,10 +50,11 @@ unsigned addition_cost(VM vm)
 }
 
 
-unsigned text_cost(VM vm, std::string expected_string)
+unsigned text_cost(std::string code, std::string expected_string)
 {
-    unsigned cost = 0;
+    unsigned cost = 1;
 
+    VM vm(code);
     vm.reset();
     vm.run("");
 
@@ -59,14 +62,16 @@ unsigned text_cost(VM vm, std::string expected_string)
     if (vm.output.length() < expected_string.length())
         cost += 256 * (expected_string.length() - vm.output.length());
     else
-        cost += 100 * (vm.output.length() - expected_string.length());
+        cost += 10 * (vm.output.length() - expected_string.length());
 
     // We count the distance beetween each letter
     auto len = std::min(vm.output.length(), expected_string.length());
     for (int i = 0; i < len; i++)
-        cost += std::abs(vm.output[i] - expected_string[i]);
+        cost += std::abs(vm.output[i] - expected_string[i]) + 10 * (vm.output[i] != expected_string[i]);
 
     // We expect programs to be short
+    // TODO : Write a function that only count the effective
+    //        code length.
     cost = cost * 20 + vm.code.length();
 
     return cost;
@@ -75,115 +80,150 @@ unsigned text_cost(VM vm, std::string expected_string)
 
 int main()
 {
-    typedef std::set<std::pair<unsigned int, std::string>> ScoredGen;
-    auto gen = random_generation(5000, 80);
-    ScoredGen gens;
+    typedef std::vector<std::pair<unsigned int, std::string>> ScoredGen;
+
+    auto generation = random_generation(1000, 40);
+    ScoredGen scored_generation;
 
     // Our goal
-    std::string goal_string = "Hello world!";
+    std::string goal_string = "Hello!";
 
-    for (int i = 0; i < 45000; i++)
+    // Evolution loop
+    for (int i = 0; /* i < 4500 */ true; i++)
     {
-        gens = ScoredGen();
-        for (int i = 0; i < gen.size(); i++)
+        // Create a list of all the code with fitness
+        scored_generation = ScoredGen();
+        for (int i = 0; i < generation.size(); i++)
         {
-            VM& vm = gen[i];
-            auto fitness = text_cost(vm, goal_string);
-            gens.insert(std::make_pair(fitness, vm.code));
+            auto fitness = text_cost(generation[i], goal_string);
+            scored_generation.push_back(
+                std::make_pair(fitness, generation[i])
+                );
         }
 
+        // Sort elements
+        std::sort(scored_generation.begin(), scored_generation.end());
+
         // Break when we found a winner :
-        auto v = VM(gens.begin()->second);
-        v.run("");
-        if (v.output == goal_string)
-            break;
+        {
+            auto vm = VM(scored_generation.begin()->second);
+            vm.run("");
+            if (vm.output == goal_string)
+                break;
+        }
 
         // Compute mean
         unsigned int mean = 0;
-        for (auto x : gens)
+        for (auto x : scored_generation)
             mean += x.first;
-        mean /= gens.size();
+        mean /= scored_generation.size();
 
         #ifndef GRAPH
-
-        if (i % 100 == 0)
-            std::cout << "Gen:" << i
-                      << " Best: "
-                      << gens.begin()->first
-                      << " Worst:"
-                      << gens.rbegin()->first
-                      << " Mean:"
-                      << mean
-                      << " Count:"
-                      << gen.size()
-                      << "\n      Out:"
-                      << v.output
-                      << "\n      Code:"
-                      << gens.begin()->second
-                      << std::endl;
-
+        {
+            auto vm = VM(scored_generation.begin()->second);
+            vm.run();
+            auto w = scored_generation.begin();
+            if (i % 10 == 0)
+                std::cout << "Gen:" << i
+                          << " Best: "
+                          << scored_generation.begin()->first
+                          << " Worst:"
+                          << scored_generation.rbegin()->first
+                          << " Mean:"
+                          << mean
+                          << " Count:"
+                          << generation.size()
+                          << "\n      Out:"
+                          << vm.output
+                          << "\n      Code:"
+                          << w++->second
+                          << "\n      Code:"
+                          << w++->second
+                          << "\n      Code:"
+                          << w++->second
+                          << std::endl;
+        }
         #else
 
         if (i % 1 == 0)
-            std::cout << gens.begin()->first
+            std::cout << scored_generation.begin()->first
                       << " "
-                      << gens.rbegin()->first
+                      << scored_generation.rbegin()->first
                       << " "
                       << mean
                       << " "
-                      << gens.begin()->second
+                      << scored_generation.begin()->second
                       << std::endl;
         #endif
 
         // New generation
-        std::vector<VM> newGen;
+        Generation new_generation;
 
-        // Keep the 30 best guys
-        auto it = gens.begin();
-        for (int i = 0; i < 30; i++, it++)
-            newGen.push_back(VM(simplify(it->second)));
+        // Keep the k best guys
+        // for (int i = 0; i < 1; i++)
+        //     new_generation.push_back(scored_generation[i].second);
 
-        //DEBUG
-        // it = gens.begin();
-        // for (int i = 0; i < 10; i++, it++)
+
+        // Only mutate the first of the list
+        // auto it = scored_generation.begin();
+        // for (int i = 0; i < 30; i++, it++)
         // {
-        //     std::cout << it->first << " " << simplify(it->second) << std::endl;
+        //     std::string code = it->second;
+
+        //     // code = mutate_insert(code, 0.01f);
+        //     // code = mutate_delete(code, 0.01f);
+        //     code = mutate_replace(code, 0.01f);
+        //     new_generation.push_back(code);
+
+        //     // code = mutate_insert(code, 0.1f);
+        //     // code = mutate_delete(code, 0.1f);
+        //     code = mutate_replace(code, 0.1f);
+        //     new_generation.push_back(code);
+
+        //     code = mutate_replace(code, 0.4f);
+        //     new_generation.push_back(code);
         // }
 
-        it = gens.begin();
-        for (int i = 0; i < 30; i++, it++)
-        {
-            newGen.push_back(VM(simplify(repair(mutate_insert(it->second, 0.01f)))));
-            newGen.push_back(VM(simplify(repair(mutate_delete(it->second, 0.01f)))));
-            newGen.push_back(VM(simplify(repair(mutate_replace(it->second, 0.01f)))));
+        // Cross breeding of the 100 first champions (non symetric)
 
-            newGen.push_back(VM(simplify(repair(mutate_insert(it->second, 0.1f)))));
-            newGen.push_back(VM(simplify(repair(mutate_delete(it->second, 0.1f)))));
-            newGen.push_back(VM(simplify(repair(mutate_replace(it->second, 0.1f)))));
+        std::default_random_engine rd;
+        std::uniform_int_distribution<int> uniform_dist(0, 200);
+        auto ti = scored_generation.begin();
+        for (int i = 0; i < 200; i++, ti++)
+        {
+            auto tj = scored_generation.begin();
+            int idx = uniform_dist(rd);
+            while(idx--)
+                tj++;
+
+            const std::string& a = ti->second;
+            const std::string& b = tj->second;
+
+            std::string code;
+            code = cross_over(a, b, 2);
+
+            // code = mutate_insert(code, 0.001f);
+            // code = mutate_delete(code, 0.001f);
+            code = mutate_replace(code, 0.1f);
+            new_generation.push_back(code);
+
+            code = cross_over(a, b, 7);
+            // code = mutate_insert(code, 0.1f);
+            // code = mutate_delete(code, 0.1f);
+            code = mutate_replace(code, 0.1f);
+            new_generation.push_back(code);
         }
 
-        // Cross breeding of the 101 first champions (non symetric)
-//         auto ti = gens.begin();
-//         for (int i = 0; i < 100; i++, ti++)
-//         {
-//             auto tj = ti;
-//             tj++;
-//             const std::string& a = ti->second;
-//             const std::string& b = tj->second;
-//             newGen.push_back(VM(simplify(merge_from_start(a, b))));
-// //            newGen.push_back(VM(simplify(repair(a + b))));
-//         }
-
-        std::swap(gen, newGen);
+        std::swap(generation, new_generation);
     }
 
     #ifndef GRAPH
 
-    for (auto kv : gens)
+    for (auto kv : scored_generation)
     {
+        auto fitness = text_cost(kv.second, "hello world!");
         VM vm(kv.second);
         vm.run("");
-        auto fitness = text_cost(vm, "hello world!");
         std::cout << vm.code
                   << std::endl
                   << vm.output

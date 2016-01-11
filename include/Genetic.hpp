@@ -7,7 +7,7 @@
 #include <set>
 
 //! A generation is a set of virtual machine
-typedef std::vector<VM> Generation;
+typedef std::vector<Code> Generation;
 
 //! Generate random adn (can be invalid)
 std::string random_adn(int code_length);
@@ -26,6 +26,7 @@ Generation random_generation(int size, int code_length);
 
 //! Merge genetic code by alternating instructions of each program.
 std::string merge_from_start(const std::string &a, const std::string &b);
+std::string cross_over(const std::string &a, const std::string &b, int block_size = 1);
 
 //! Replace some random genes of 'code' with probability 'p'
 std::string mutate_replace(const std::string &code, float p);

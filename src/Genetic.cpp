@@ -14,15 +14,16 @@ std::map<char, int> law = {
     std::make_pair('>', 100),
     std::make_pair('<', 100),
     std::make_pair('-', 100),
-    std::make_pair('+', 100)
+    std::make_pair('+', 100),
+    std::make_pair('#', 100)
 };
 
 std::default_random_engine rd;
-std::uniform_int_distribution<int> uniform_dist(0, 1000);
+std::uniform_int_distribution<int> uniform_dist(0, 10000);
 
 char rand_char()
 {
-    float p = uniform_dist(rd) / 1000.f;
+    float p = uniform_dist(rd) / 10000.f;
 
     // Sum all the weights
     int sum = 0;
@@ -110,13 +111,8 @@ Generation random_generation(int size, int code_length)
     Generation gen;
 
     while (size--)
-    {
         //Add a newprogram
-        auto code = random_adn(code_length);
-        code = repair(code);
-        code = simplify(code);
-        gen.push_back(VM(code));
-    }
+        gen.push_back(random_adn(code_length));
 
     return gen;
 }
@@ -137,7 +133,7 @@ std::string mutate_replace(const std::string &code, float p)
     std::string out;
     for (auto c : code)
     {
-        float q = uniform_dist(rd) / 1000.f;
+        float q = uniform_dist(rd) / 10000.f;
         if (q < p)
             out.push_back(rand_char());
         else
@@ -152,7 +148,7 @@ std::string mutate_insert(const std::string &code, float p)
     std::string out;
     for (auto c : code)
     {
-        float q = uniform_dist(rd) / 1000.f;
+        float q = uniform_dist(rd) / 10000.f;
         if (q < p)
             out.push_back(rand_char());
         out.push_back(c);
@@ -165,7 +161,7 @@ std::string mutate_delete(const std::string &code, float p)
     std::string out;
     for (auto c : code)
     {
-        float q = uniform_dist(rd) / 1000.f;
+        float q = uniform_dist(rd) / 10000.f;
         if (q < p)
             continue;
         out.push_back(c);
@@ -184,6 +180,37 @@ std::string merge_from_start(const std::string &a, const std::string &b)
     {
         out.push_back(*pa);
         out.push_back(*pb);
+        pa++;
+        pb++;
+    }
+    std::copy(pa, a.end(), std::back_inserter(out));
+    std::copy(pb, b.end(), std::back_inserter(out));
+
+    return out;
+}
+
+std::string cross_over(const std::string &a, const std::string &b, int block_size)
+{
+    std::string out;
+
+    auto pa = a.begin();
+    auto pb = b.begin();
+    float p = 0;
+    int counter = block_size;
+    while (pa != a.end() && pb != b.end())
+    {
+        // Reset probability each block_size block
+        if (counter == block_size)
+        {
+            p = uniform_dist(rd) / 10000.f;
+            counter = 0;
+        }
+
+        // Select from who come the block
+        if (p > 0.5)
+            out.push_back(*pa);
+        else
+            out.push_back(*pb);
         pa++;
         pb++;
     }
