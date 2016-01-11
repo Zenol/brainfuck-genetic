@@ -8,6 +8,7 @@
 
 //! A generation is a set of virtual machine.
 typedef std::vector<Code> Generation;
+typedef std::vector<std::pair<unsigned int, Code>> ScoredGeneration;
 
 // -----------------
 // -- Work on ADN --

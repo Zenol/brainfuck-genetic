@@ -130,6 +130,19 @@ Generation random_generation(int size, int code_length)
     return gen;
 }
 
+//! Create a list of all the code with fitness
+ScoredGeneration score_generation(const Generation &generation,
+                                  std::function<unsigned int(Code)> fitness_fct)
+{
+    ScoredGeneration scored_generation;
+    for (int i = 0; i < generation.size(); i++)
+    {
+        auto fitness = fitness_fct(generation[i]);
+        scored_generation.push_back(std::make_pair(fitness, generation[i]));
+    }
+    return scored_generation;
+}
+
 // ---------------
 // -- Mutations --
 

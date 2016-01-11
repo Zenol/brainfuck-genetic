@@ -46,10 +46,8 @@ unsigned text_cost(std::string code, std::string expected_string)
 
 int main()
 {
-    typedef std::vector<std::pair<unsigned int, std::string>> ScoredGen;
-
+    ScoredGeneration scored_generation;
     auto generation = random_generation(1000, 80);
-    ScoredGen scored_generation;
 
     // Our goal
     std::string goal_string = "Hello world!";
@@ -58,7 +56,7 @@ int main()
     for (int i = 0; /* i < 4500 */ true; i++)
     {
         // Create a list of all the code with fitness
-        scored_generation = ScoredGen();
+        scored_generation = ScoredGeneration();
         for (int i = 0; i < generation.size(); i++)
         {
             auto fitness = text_cost(generation[i], goal_string);
