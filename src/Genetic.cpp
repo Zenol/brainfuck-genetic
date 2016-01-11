@@ -130,7 +130,6 @@ Generation random_generation(int size, int code_length)
     return gen;
 }
 
-//! Create a list of all the code with fitness
 ScoredGeneration score_generation(const Generation &generation,
                                   std::function<unsigned int(Code)> fitness_fct)
 {
@@ -143,10 +142,29 @@ ScoredGeneration score_generation(const Generation &generation,
     return scored_generation;
 }
 
+Code select_fps(ScoredGeneration &generation)
+{
+    double sum = 0;
+    for (auto x : generation)
+        sum += 1.f / x.first;
+
+    std::uniform_real_distribution<double> uniform_dist(1, sum);
+
+    auto idx = uniform_dist(rd);
+    auto it = generation.begin();
+    while (it != generation.begin())
+    {
+        idx -= it->first;
+        if (idx <= 0)
+            return it->second;
+    }
+    return generation.begin()->second;
+}
+
 // ---------------
 // -- Mutations --
 
-std::string mutate_replace(const std::string &code, float p)
+Code mutate_replace(const Code &code, float p)
 {
     std::string out;
     for (auto c : code)

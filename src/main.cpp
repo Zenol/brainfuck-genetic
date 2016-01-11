@@ -56,19 +56,15 @@ int main()
     for (int i = 0; /* i < 4500 */ true; i++)
     {
         // Create a list of all the code with fitness
-        scored_generation = ScoredGeneration();
-        for (int i = 0; i < generation.size(); i++)
-        {
-            auto fitness = text_cost(generation[i], goal_string);
-            scored_generation.push_back(
-                std::make_pair(fitness, generation[i])
-                );
-        }
+        scored_generation = score_generation(generation,
+                                             [=](Code code) {
+                                                 return text_cost(code, goal_string);
+                                             });
 
         // Sort elements
         std::sort(scored_generation.begin(), scored_generation.end());
 
-        // Break when we found a winner :
+        // Break if we found a winner :
         if (i % 30 == 0)
         {
             auto vm = VM(scored_generation.begin()->second);

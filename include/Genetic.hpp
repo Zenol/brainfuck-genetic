@@ -31,6 +31,10 @@ std::string repair(std::string);
 //! Create a random generation
 Generation random_generation(int size, int code_length);
 
+//! Create a list of all the code with fitness
+ScoredGeneration score_generation(const Generation &generation,
+                                  std::function<unsigned int(Code)> fitness_fct);
+
 // ------------------
 // -- Reproduction --
 
