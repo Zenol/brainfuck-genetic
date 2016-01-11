@@ -40,8 +40,8 @@ void VM::reset()
     input_consumed = 0;
 }
 
-// -- Helpers
-static int goto_bracket_end(int i, std::string code)
+// -- Helpers functions
+int goto_bracket_end(int i, const std::string &code)
 {
     int lvl = 0;
     i++;
@@ -59,7 +59,7 @@ static int goto_bracket_end(int i, std::string code)
     }
 }
 
-static int goto_bracket_begin(int i, std::string code)
+int goto_bracket_begin(int i, const std::string &code)
 {
     int lvl = 0;
     i--;
@@ -76,6 +76,8 @@ static int goto_bracket_begin(int i, std::string code)
         i--;
     }
 }
+
+// -- Run brainfuck code
 
 bool VM::run(std::string input, int max_cycles)
 {

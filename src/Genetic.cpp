@@ -4,8 +4,11 @@
 #include <random>
 #include <map>
 
-//Law of probabilities
 
+// -----------------
+// -- Work on ADN --
+
+//! Law of probabilities
 std::map<char, int> law = {
     std::make_pair('[', 100),
     std::make_pair(']', 100),
@@ -21,7 +24,7 @@ std::map<char, int> law = {
 std::default_random_engine rd;
 std::uniform_int_distribution<int> uniform_dist(0, 10000);
 
-char rand_char()
+char random_gene()
 {
     float p = uniform_dist(rd) / 10000.f;
 
@@ -40,11 +43,11 @@ char rand_char()
     return '#';
 }
 
-std::string random_adn(int code_length)
+std::string random_chromosome(int code_length)
 {
     std::string s;
     while(code_length--)
-        s.push_back(rand_char());
+        s.push_back(random_gene());
     return s;
 }
 
@@ -52,24 +55,31 @@ std::string repair(std::string code)
 {
     std::string out;
 
-    int lvl = 0;
     int length = code.length();
     for (int i = 0; i < length; i++)
     {
-        // Forget about closing bracket with no use
-        if (code[i] == ']' && lvl <= 0)
-            continue;
-        // Count opening bracket
-        if (code[i] == '[')
-            lvl++;
-        // Count closing backet
-        if (code[i] == ']')
-            lvl--;
-        out.push_back(code[i]);
+        switch(code[i])
+        {
+        case '[':
+        case ']':
+        case '+':
+        case '-':
+        case '<':
+        case '>':
+        case '.':
+        case ',':
+            // Check validity of opening bracket
+            if (code[i] == ']' && goto_bracket_end(i, code) == -1)
+                continue;
+            // Check validity of closing bracket
+            if (code[i] == '[' && goto_bracket_begin(i, code) == -1)
+                continue;
+            out.push_back(code[i]);
+            break;
+        default:
+            break;
+        }
     }
-    // Add missing closing brackets
-    while(lvl-- > 0)
-        out.push_back(']');
 
     return out;
 }
@@ -106,27 +116,22 @@ std::string simplify(std::string code)
     return out;
 }
 
+// -------------------------
+// -- Work on generations --
+
 Generation random_generation(int size, int code_length)
 {
     Generation gen;
 
     while (size--)
         //Add a newprogram
-        gen.push_back(random_adn(code_length));
+        gen.push_back(random_chromosome(code_length));
 
     return gen;
 }
 
-std::set<std::pair<int, std::string>>
-    sort_generation(std::vector<VM> gen, std::function<int (const VM&)> f)
-{
-    std::set<std::pair<int, std::string>> set;
-
-    for (auto vm : gen)
-        set.insert(std::make_pair(f(vm), vm.code));
-
-    return set;
-}
+// ---------------
+// -- Mutations --
 
 std::string mutate_replace(const std::string &code, float p)
 {
@@ -135,7 +140,7 @@ std::string mutate_replace(const std::string &code, float p)
     {
         float q = uniform_dist(rd) / 10000.f;
         if (q < p)
-            out.push_back(rand_char());
+            out.push_back(random_gene());
         else
             out.push_back(c);
     }
@@ -150,7 +155,7 @@ std::string mutate_insert(const std::string &code, float p)
     {
         float q = uniform_dist(rd) / 10000.f;
         if (q < p)
-            out.push_back(rand_char());
+            out.push_back(random_gene());
         out.push_back(c);
     }
     return out;
@@ -169,6 +174,8 @@ std::string mutate_delete(const std::string &code, float p)
     return out;
 }
 
+// ------------------
+// -- Reproduction --
 
 std::string merge_from_start(const std::string &a, const std::string &b)
 {

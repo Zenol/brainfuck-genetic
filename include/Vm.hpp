@@ -4,8 +4,12 @@
 #include <string>
 #include <vector>
 
+//! Type that represent a brainfuck code.
 typedef std::string Code;
 
+//! An 'infinite' bidirectional ribbon.
+//!
+//! It's a zipper.
 struct Ribbon
 {
     Ribbon();
@@ -19,7 +23,6 @@ private:
     std::vector<char> vright;
 };
 
-// Assert that the input string is valid brainfuck code
 class VM
 {
 public:
@@ -28,7 +31,7 @@ public:
     //! Run the vm with 'input' as the given input.
     bool run(std::string input = "", int max_cycles = 1600);
 
-    //! Reset the VM (ribbon and output)
+    //! Reset the VM (ribbon and output).
     void reset();
 
     int input_consumed;
@@ -36,5 +39,19 @@ public:
     Ribbon ribbon;
     Code code;
 };
+
+// -- Helpers functions :
+
+//! Locate the index of the opening bracket for the closing bracket
+//! located at location i.
+//!
+//! \return location of the opening bracket, -1 if failed.
+int goto_bracket_begin(int i, const std::string& code);
+
+//! Locate the index of the closing bracket for the opening bracket
+//! located at location i.
+//!
+//! \return location of the closing bracket, -1 if failed.
+int goto_bracket_end(int i, const std::string &code);
 
 #endif
