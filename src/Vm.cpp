@@ -30,7 +30,7 @@ void Ribbon::right()
 // -- Vm implementation
 
 VM::VM(std::string icode)
-    :code(icode), input_consumed(0)
+    :code(icode), input_consumed(0), killed(false)
 {}
 
 void VM::reset()
@@ -38,6 +38,7 @@ void VM::reset()
     output = "";
     ribbon = Ribbon();
     input_consumed = 0;
+    killed = false;
 }
 
 // -- Helpers functions
@@ -82,6 +83,7 @@ int goto_bracket_begin(int i, const std::string &code)
 bool VM::run(std::string input, int max_cycles)
 {
     int input_idx = 0;
+    killed = false;
     for (int i = 0; i < code.length() && max_cycles; i++, max_cycles--)
     {
         switch(code[i])
@@ -130,8 +132,8 @@ bool VM::run(std::string input, int max_cycles)
             //Ignore unknow characters
             continue;
         }
-        if (i < 0)
-            return false;
     }
-    return true;
+    if (max_cycles <= 0)
+        killed = true;
+    return !killed;
 }

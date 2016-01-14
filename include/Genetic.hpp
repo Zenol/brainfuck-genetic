@@ -35,6 +35,9 @@ Generation random_generation(int size, int code_length);
 ScoredGeneration score_generation(const Generation &generation,
                                   std::function<unsigned int(Code)> fitness_fct);
 
+//! Select a chromosome with FSP selection.
+Code select_fps(ScoredGeneration &generation);
+
 // ------------------
 // -- Reproduction --
 
@@ -43,7 +46,8 @@ std::string merge_from_start(const std::string &a, const std::string &b);
 
 //! Select a random location in a. then split a and b at the same index,
 //  and swap the tail of those two. This operation occure in place.
-void cross_over(std::string &a, std::string &b);
+// This happend with probability 'p'.
+void cross_over(std::string &a, std::string &b, double p);
 
 //! Interleave a and b genes by chuck of size 'block_size'.
 std::string multi_cross_over(const std::string &a, const std::string &b, int block_size);
@@ -52,10 +56,12 @@ std::string multi_cross_over(const std::string &a, const std::string &b, int blo
 // -- Mutations --
 
 //! For each gene, replace it with a random one with probability 'p'
-std::string mutate_replace(const std::string &code, float p);
+std::string mutate_replace(const std::string &code, double p);
 //! For each gene, insert a random gene ahead with probability 'p'
-std::string mutate_insert(const std::string &code, float p);
+std::string mutate_insert(const std::string &code, double p);
 //! For each gene, remove it with probability 'p'
-std::string mutate_delete(const std::string &code, float p);
+std::string mutate_delete(const std::string &code, double p);
+//! With probability p, swap two adjacent genes
+std::string mutate_swap(const std::string &code, double p);
 
 #endif

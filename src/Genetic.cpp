@@ -17,8 +17,8 @@ std::map<char, int> law = {
     std::make_pair('>', 100),
     std::make_pair('<', 100),
     std::make_pair('-', 100),
-    std::make_pair('+', 100),
-    std::make_pair('#', 100)
+    std::make_pair('+', 100)
+//    std::make_pair('?', 100)
 };
 
 std::default_random_engine rd;
@@ -26,7 +26,7 @@ std::uniform_int_distribution<int> uniform_dist(0, 10000);
 
 char random_gene()
 {
-    float p = uniform_dist(rd) / 10000.f;
+    double p = uniform_dist(rd) / 10000.f;
 
     // Sum all the weights
     int sum = 0;
@@ -141,22 +141,21 @@ ScoredGeneration score_generation(const Generation &generation,
     }
     return scored_generation;
 }
-
+#include <iostream>
 Code select_fps(ScoredGeneration &generation)
 {
     double sum = 0;
     for (auto x : generation)
         sum += 1.f / x.first;
 
-    std::uniform_real_distribution<double> uniform_dist(1, sum);
+    std::uniform_real_distribution<double> uniform_dist(0, sum);
 
     auto idx = uniform_dist(rd);
-    auto it = generation.begin();
-    while (it != generation.begin())
+    for (const auto &x : generation)
     {
-        idx -= it->first;
+        idx -= 1.f / x.first;
         if (idx <= 0)
-            return it->second;
+            return x.second;
     }
     return generation.begin()->second;
 }
@@ -164,12 +163,12 @@ Code select_fps(ScoredGeneration &generation)
 // ---------------
 // -- Mutations --
 
-Code mutate_replace(const Code &code, float p)
+Code mutate_replace(const Code &code, double p)
 {
     std::string out;
     for (auto c : code)
     {
-        float q = uniform_dist(rd) / 10000.f;
+        double q = uniform_dist(rd) / 10000.f;
         if (q < p)
             out.push_back(random_gene());
         else
@@ -179,12 +178,12 @@ Code mutate_replace(const Code &code, float p)
 }
 
 
-std::string mutate_insert(const std::string &code, float p)
+std::string mutate_insert(const std::string &code, double p)
 {
     std::string out;
     for (auto c : code)
     {
-        float q = uniform_dist(rd) / 10000.f;
+        double q = uniform_dist(rd) / 10000.f;
         if (q < p)
             out.push_back(random_gene());
         out.push_back(c);
@@ -192,15 +191,32 @@ std::string mutate_insert(const std::string &code, float p)
     return out;
 }
 
-std::string mutate_delete(const std::string &code, float p)
+std::string mutate_delete(const std::string &code, double p)
 {
     std::string out;
     for (auto c : code)
     {
-        float q = uniform_dist(rd) / 10000.f;
+        double q = uniform_dist(rd) / 10000.f;
         if (q < p)
             continue;
         out.push_back(c);
+    }
+    return out;
+}
+
+std::string mutate_swap(const std::string &code, double p)
+{
+    if (code.length() > 1)
+        return code;
+
+    std::string out = code;
+    double q = uniform_dist(rd) / 10000.f;
+    if (q < p)
+    {
+        std::uniform_int_distribution<unsigned int> d(0, code.length() - 2);
+        auto pos = d(rd);
+
+        std::swap(out[pos], out[pos + 1]);
     }
     return out;
 }
@@ -227,8 +243,11 @@ std::string merge_from_start(const std::string &a, const std::string &b)
     return out;
 }
 
-void cross_over(std::string &a, std::string &b)
+void cross_over(std::string &a, std::string &b, double p)
 {
+    double q = uniform_dist(rd) / 10000.f;
+    if (q > p)
+        return;
 
     std::string oa, ob;
 
@@ -254,7 +273,7 @@ std::string multi_cross_over(const std::string &a, const std::string &b, int blo
 
     auto pa = a.begin();
     auto pb = b.begin();
-    float p = 0;
+    double p = 0;
     int counter = block_size;
     while (pa != a.end() && pb != b.end())
     {

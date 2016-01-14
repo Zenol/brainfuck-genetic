@@ -29,12 +29,13 @@ public:
     VM(std::string code);
 
     //! Run the vm with 'input' as the given input.
-    bool run(std::string input = "", int max_cycles = 1600);
+    bool run(std::string input = "", int max_cycles = 15000);
 
     //! Reset the VM (ribbon and output).
     void reset();
 
     int input_consumed;
+    bool killed;
     std::string output;
     Ribbon ribbon;
     Code code;
