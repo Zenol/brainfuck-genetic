@@ -24,25 +24,14 @@ unsigned text_cost(std::string code, std::string expected_string)
     vm.reset();
     vm.run("");
 
-    // We expect the output to have the same length
+    // We expect the output to have bigger length
     if (vm.output.length() < expected_string.length())
         cost += 256 * (expected_string.length() - vm.output.length());
-    else
-        cost += 200 * (vm.output.length() - expected_string.length());
 
     // We count the distance beetween each letter
     auto len = std::min(vm.output.length(), expected_string.length());
     for (int i = 0; i < len; i++)
-        cost += std::abs(vm.output[i] - expected_string[i]) + 10 * (vm.output[i] != expected_string[i]);
-
-    // We expect programs to be short
-    // TODO : Write a function that only count the effective
-    //        code length.
-    //cost = cost * 20 + vm.code.length();
-
-    // We really want programs that terminate!!!
-    if (vm.killed)
-        cost += 100000;
+      cost += std::abs(vm.output[i] - expected_string[i]);
 
     return cost;
 }
@@ -51,10 +40,10 @@ unsigned text_cost(std::string code, std::string expected_string)
 int main()
 {
     ScoredGeneration scored_generation;
-    auto generation = random_generation(5000, 250);
+    auto generation = random_generation(5000, 200);
 
     // Our goal
-    std::string goal_string = "Hello world!";
+    std::string goal_string = "Hello!";
 
     // Evolution loop
     for (int i = 0; /* i < 4500 */ true; i++)
@@ -67,17 +56,18 @@ int main()
 
         Generation new_generation;
 
-        for (int i = 0; i < 100; i++)
+        for (int i = 0; i < 1000; i++)
         {
             std::string code1 = select_fps(scored_generation);
             std::string code2 = select_fps(scored_generation);
 
-            cross_over(code1, code2, 0.7);
+	    // Always crossover
+            cross_over(code1, code2, 1.f);
 
-            code1 = mutate_replace(code1, 0.01f);
-            code2 = mutate_replace(code2, 0.01f);
-            code1 = mutate_swap(code1, 0.1f);
-            code2 = mutate_swap(code2, 0.1f);
+            code1 = mutate_replace(code1, 5.0f/10000.f);
+            code2 = mutate_replace(code2, 5.0f/10000.f);
+            code1 = mutate_swap(code1, 5.0f/10000.f);
+            code2 = mutate_swap(code2, 5.0f/10000.f);
 
             new_generation.push_back(code1);
             new_generation.push_back(code2);
@@ -87,18 +77,18 @@ int main()
         std::sort(scored_generation.begin(), scored_generation.end());
 
         // Keep the k best guys
-        {
-            std::string prev;
-            auto it = scored_generation.begin();
-            for (int i = 0; i < 10; i++)
-            {
-                while (prev == it->second)
-                    it++;
-                new_generation.push_back(it->second);
-                prev = it->second;
-                it++; // TODO : !!!! Look at scored_generation.end()
-            }
-        }
+        // {
+        //     std::string prev;
+        //     auto it = scored_generation.begin();
+        //     for (int i = 0; i < 10; i++)
+        //     {
+        //         while (prev == it->second)
+        //             it++;
+        //         new_generation.push_back(it->second);
+        //         prev = it->second;
+        //         it++; // TODO : !!!! Look at scored_generation.end()
+        //     }
+        // }
 
 
         // Break if we found a winner :
@@ -106,7 +96,7 @@ int main()
         {
             auto vm = VM(scored_generation.begin()->second);
             vm.run("");
-            if (vm.output == goal_string)
+            if (vm.output.substr(0, goal_string.length()) == goal_string)
                 break;
         }
 
